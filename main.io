@@ -5,7 +5,7 @@ Potato := Object clone do (
   __POST_methods__ := Map clone
 
   GET := method(route, implementation,
-   __GET_methods__ atPut(route, implementation)
+    __GET_methods__ atPut(route, implementation)
   )
 
   POST := method(route, implementation,
@@ -72,6 +72,10 @@ app server port := 2001
 app GET("/", block(
   f := File with("potato.html") openForReading contents
   app ok(f)
+))
+
+app GET("/random", block(
+  app ok(Random value(100000) floor)
 ))
 
 # And a simple method dealing with GET arguments.
