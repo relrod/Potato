@@ -5,7 +5,7 @@ Potato := Object clone do (
   __POST_methods__ := Map clone
 
   GET := method(route, implementation,
-    __GET_methods__ atPut(route, implementation)
+   __GET_methods__ atPut(route, implementation)
   )
 
   POST := method(route, implementation,
@@ -33,7 +33,7 @@ Potato := Object clone do (
       requestPath := sock readBuffer betweenSeq("GET ", " HTTP")
       "#{sock ipAddress}: #{requestPath}" interpolate println
       if (Potato __GET_methods__ keys contains(requestPath)) then (
-        sock write(Potato __GET_methods__ at(requestPath))
+        sock write(Potato __GET_methods__ at(requestPath) call)
         sock close
       ) else (
         response := "HTTP/1.1 404 Not Found\n\n"
@@ -69,13 +69,13 @@ app := Potato clone
 app server port := 2001
 
 # Let's create a simple method.
-app GET("/", method(
+app GET("/", block(
   f := File with("potato.html") openForReading contents
   app ok(f)
 ))
 
 # And a simple method dealing with GET arguments.
-app GET("/greet", method(
+app GET("/greet", block(
 //  name := app args at("name")
 //  app ok("Greetings, #{name}" interpolate)
 ))
