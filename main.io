@@ -27,6 +27,17 @@ Potato := Object clone do (
     response
   )
 
+  // Take the path given by the user, and attempt to route it to a block.
+  // Return the block if it exists or `nil` if not.
+  // Note that this method does not *CALL* the block, it simply returns it.
+  route := method(given,
+    if (Potato __GET_methods__ keys contains(given),
+      Potato __GET_methods__ at(given),
+      nil
+    )
+  )
+
+
   server handleRequest := method(sock,
     sock streamReadNextChunk
     if (sock readBuffer beginsWithSeq("GET"),
@@ -57,10 +68,11 @@ Potato := Object clone do (
 
 
       "#{request ip}: #{request path}" interpolate println
-      if (Potato __GET_methods__ keys contains(request path)) then (
-        sock write(Potato __GET_methods__ at(request path) call(request))
+      if (controller := Potato route(request path)) then (
+        sock write(controller call(request))
         sock close
       ) else (
+        // If route returns nil...
         response := "HTTP/1.1 404 Not Found\n\n"
         response = response .. "<b>404!</b>"
       )
