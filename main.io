@@ -30,9 +30,31 @@ Potato := Object clone do (
   server handleRequest := method(sock,
     sock streamReadNextChunk
     if (sock readBuffer beginsWithSeq("GET"),
+
+      // Split things up into a request object that we can send back to the
+      // block.
       request := Object clone
       request ip := sock ipAddress
-      request path := sock readBuffer betweenSeq("GET ", " HTTP")
+
+      queryStringSplit := sock readBuffer betweenSeq("GET ", " HTTP") split("?")
+      request path := queryStringSplit at(0) // This will exist even if no qs does.
+      request queryString := queryStringSplit at(1)
+      request args := Map clone
+
+      if (request queryString,
+        qsSplit := request queryString split("&")
+        qsSplit foreach(q,
+          // Split it - if it splits into 2, set key=value, otherwise set key=""
+          querySplit := q split("=")
+          if (querySplit size == 1,
+            request args atPut(querySplit at(0), "")
+          )
+          if (querySplit size == 2,
+            request args atPut(querySplit at(0), querySplit at(1))
+          )
+        )
+      )
+
 
       "#{request ip}: #{request path}" interpolate println
       if (Potato __GET_methods__ keys contains(request path)) then (
@@ -87,7 +109,7 @@ app GET("/ip", block(request,
 
 # And a simple method dealing with GET arguments.
 app GET("/greet", block(request,
-  app ok("hi")
+  app ok("Hi there, #{request args at(\"name\")}" interpolate)
 ))
 
 app run
