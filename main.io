@@ -30,10 +30,13 @@ Potato := Object clone do (
   server handleRequest := method(sock,
     sock streamReadNextChunk
     if (sock readBuffer beginsWithSeq("GET"),
-      requestPath := sock readBuffer betweenSeq("GET ", " HTTP")
-      "#{sock ipAddress}: #{requestPath}" interpolate println
-      if (Potato __GET_methods__ keys contains(requestPath)) then (
-        sock write(Potato __GET_methods__ at(requestPath) call)
+      request := Object clone
+      request ip := sock ipAddress
+      request path := sock readBuffer betweenSeq("GET ", " HTTP")
+
+      "#{request ip}: #{request path}" interpolate println
+      if (Potato __GET_methods__ keys contains(request path)) then (
+        sock write(Potato __GET_methods__ at(request path) call(request))
         sock close
       ) else (
         response := "HTTP/1.1 404 Not Found\n\n"
@@ -69,19 +72,22 @@ app := Potato clone
 app server port := 2001
 
 # Let's create a simple method.
-app GET("/", block(
+app GET("/", block(request,
   f := File with("potato.html") openForReading contents
   app ok(f)
 ))
 
-app GET("/random", block(
+app GET("/random", block(request,
   app ok(Random value(100000) floor)
 ))
 
+app GET("/ip", block(request,
+  app ok(request ip)
+))
+
 # And a simple method dealing with GET arguments.
-app GET("/greet", block(
-//  name := app args at("name")
-//  app ok("Greetings, #{name}" interpolate)
+app GET("/greet", block(request,
+  app ok("hi")
 ))
 
 app run
