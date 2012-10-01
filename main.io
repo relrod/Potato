@@ -67,7 +67,7 @@ Potato := Object clone do (
       )
 
 
-      "#{request ip}: #{request path}" interpolate println
+      "[request] #{27 asCharacter}[34m#{request ip}#{27 asCharacter}[0m - #{27 asCharacter}[32m#{request path}#{27 asCharacter}[0m" interpolate println
       if (controller := Potato route(request path)) then (
         sock write(controller call(request))
         sock close
