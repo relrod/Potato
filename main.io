@@ -45,7 +45,7 @@ Potato := Object clone do (
       // Split things up into a request object that we can send back to the
       // block.
       request := Object clone
-      request ip := sock ipAddress
+      request ip := sock host
 
       queryStringSplit := sock readBuffer betweenSeq("GET ", " HTTP") split("?")
       request path := queryStringSplit at(0) // This will exist even if no qs does.
