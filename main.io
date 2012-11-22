@@ -15,17 +15,37 @@ Potato := Object clone do (
   server := Object clone
   server port := 2000
 
+  server headers := Map clone do(
+    atPut("Content-Type", "text/html")
+  )
+
   ok := method(body,
-    response := "HTTP/1.1 200 OK\n\n"
-    response = response .. body
+    response := "HTTP/1.1 200 OK\n"
+    server headers foreach(name, value,
+      response = response .. "#{name}: #{value}\n" interpolate
+    )
+    response = response .. "\n" .. body
     response
   )
 
   bad_request := method(body,
-    response := "HTTP/1.1 400 Bad Request\n\n"
-    response = response .. body
+    response := "HTTP/1.1 400 Bad Request\n"
+    server headers foreach(name, value,
+      response = response .. "#{name}: #{value}\n" interpolate
+    )
+    response = response .. "\n" .. body
     response
   )
+
+  not_found := method(body,
+    response := "HTTP/1.1 404 Not Found\n"
+    server headers foreach(name, value,
+      response = response .. "#{name}: #{value}\n" interpolate
+    )
+    response = response .. "\n" .. body
+    response
+  )
+
 
   // Take the path given by the user, and attempt to route it to a block.
   // Return the block if it exists or `nil` if not.
@@ -72,9 +92,9 @@ Potato := Object clone do (
         sock write(controller call(request))
         sock close
       ) else (
-        // If route returns nil...
-        response := "HTTP/1.1 404 Not Found\n\n"
-        response = response .. "<b>404!</b>"
+        "  -> 404 Not Found" println
+        sock write(Potato not_found("404!"))
+        sock close
       )
     )
   )
@@ -117,6 +137,12 @@ app GET("/random", block(request,
 
 app GET("/ip", block(request,
   app ok(request ip)
+))
+
+app GET("/tmp", block(request,
+  app ok(Directory clone with ("/tmp") items map(file,
+    "<a href=\"#{file name}\">#{file name}</a>" interpolate
+  ) join("<br>"))
 ))
 
 # And a simple method dealing with GET arguments.
